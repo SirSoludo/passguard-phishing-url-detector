@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PassGuard — Phishing Detection System</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <div class="wrap">
+
+    <!-- ── HEADER ── -->
+    <header>
+      <div class="logo-row">
+        <div class="logo-icon">🛡</div>
+        <div>
+          <div class="logo-text">Pass<span>Guard</span></div>
+          <div class="header-sub">Intelligent URL Phishing Detection System · Final Year Project</div>
+        </div>
+        <div class="status-pill">
+          <span class="status-dot"></span> System Online
+        </div>
+      </div>
+
+      <!-- Nav Tabs -->
+      <div class="nav-tabs">
+        <button class="tab-btn active" data-tab="analyzer">URL Analyzer</button>
+        <button class="tab-btn" data-tab="dashboard">Dashboard</button>
+        <button class="tab-btn" data-tab="model">Model Info</button>
+      </div>
+    </header>
+
+    <!-- ══════════════════════════════════
+         TAB 1 — ANALYZER
+    ══════════════════════════════════ -->
+    <section class="tab-panel active" id="tab-analyzer">
+
+      <!-- Input -->
+      <div class="input-section">
+        <span class="input-label">Enter URL to analyze</span>
+        <div class="input-row">
+          <input type="text" id="urlInput" class="url-input"
+            placeholder="https://example.com/login?token=abc123"
+            spellcheck="false" autocomplete="off" />
+          <button class="scan-btn" id="scanBtn" onclick="analyse()">
+            <span id="btnText">Scan URL</span>
+            <span id="btnSpinner" style="display:none">Scanning…</span>
+          </button>
+        </div>
+
+        <!-- Example chips -->
+        <div class="examples-row">
+          <span class="ex-label">Try:</span>
+          <span class="ex-chip safe"   onclick="loadExample(this)">https://www.google.com/search?q=python</span>
+          <span class="ex-chip safe"   onclick="loadExample(this)">https://github.com/user/repo</span>
+          <span class="ex-chip phish"  onclick="loadExample(this)">http://paypal-secure-verify.xyz/login?account=abc</span>
+          <span class="ex-chip phish"  onclick="loadExample(this)">http://192.168.1.100/bank/update.php</span>
+          <span class="ex-chip phish"  onclick="loadExample(this)">http://apple.com@evil-phishing.net/verify</span>
+        </div>
+      </div>
+
+      <!-- Result Area -->
+      <div id="resultArea"></div>
+
+    </section>
+
+    <!-- ══════════════════════════════════
+         TAB 2 — DASHBOARD
+    ══════════════════════════════════ -->
+    <section class="tab-panel" id="tab-dashboard">
+
+      <div class="stat-row">
+        <div class="stat-card">
+          <div class="stat-icon total">⬡</div>
+          <div>
+            <div class="stat-val" id="statTotal">0</div>
+            <div class="stat-label">Total Scanned</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon safe">✓</div>
+          <div>
+            <div class="stat-val safe" id="statSafe">0</div>
+            <div class="stat-label">Legitimate</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon warn">◈</div>
+          <div>
+            <div class="stat-val warn" id="statSuspicious">0</div>
+            <div class="stat-label">Suspicious</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon danger">⊗</div>
+          <div>
+            <div class="stat-val danger" id="statPhish">0</div>
+            <div class="stat-label">Phishing</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-top">
+          <div class="card-title">Recent History</div>
+          <button class="mini-btn" onclick="loadStats()">↻ Refresh</button>
+        </div>
+        <table class="hist-table">
+          <thead>
+            <tr><th>#</th><th>URL</th><th>Result</th><th>Time</th></tr>
+          </thead>
+          <tbody id="histBody">
+            <tr><td colspan="4" class="empty-cell">No URLs analyzed yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </section>
+
+    <!-- ══════════════════════════════════
+         TAB 3 — MODEL INFO
+    ══════════════════════════════════ -->
+    <section class="tab-panel" id="tab-model">
+
+      <div class="metric-row" id="metricRow">
+        <div class="empty-cell" style="padding:40px;text-align:center">Loading metrics…</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" style="margin-bottom:16px">Model Comparison</div>
+        <table class="hist-table" id="modelTable">
+          <thead>
+            <tr><th>Model</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1 Score</th><th>Status</th></tr>
+          </thead>
+          <tbody id="modelBody">
+            <tr><td colspan="6" class="empty-cell">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-title" style="margin-bottom:16px">Confusion Matrix</div>
+        <div id="cmWrap"></div>
+        <div class="cm-legend">
+          <span><b style="color:var(--safe)">■</b> TN — Correctly identified as legitimate</span>
+          <span><b style="color:var(--danger)">■</b> FP — Legitimate flagged as phishing</span>
+          <span><b style="color:var(--danger)">■</b> FN — Phishing missed</span>
+          <span><b style="color:var(--accent)">■</b> TP — Correctly identified as phishing</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" style="margin-bottom:16px">16 Lexical Features</div>
+        <div class="feat-explain-grid">
+          <div class="fe-item"><span class="fe-num">01</span><b>url_length</b><span>Longer URLs are more likely to be phishing.</span></div>
+          <div class="fe-item"><span class="fe-num">02</span><b>domain_length</b><span>Long domain names suggest obfuscation.</span></div>
+          <div class="fe-item"><span class="fe-num">03</span><b>num_dots</b><span>Excess dots indicate subdomain nesting.</span></div>
+          <div class="fe-item"><span class="fe-num">04</span><b>num_subdomains</b><span>Attackers nest brands as subdomains.</span></div>
+          <div class="fe-item"><span class="fe-num">05</span><b>num_hyphens</b><span>Hyphens mimic brands: pay-pal-login.com</span></div>
+          <div class="fe-item"><span class="fe-num">06</span><b>num_underscores</b><span>Rare in legit domains; suspicious when present.</span></div>
+          <div class="fe-item"><span class="fe-num">07</span><b>num_digits</b><span>High digit count → randomly generated domain.</span></div>
+          <div class="fe-item"><span class="fe-num">08</span><b>has_at_symbol</b><span>@ tricks browser — everything before it is ignored.</span></div>
+          <div class="fe-item"><span class="fe-num">09</span><b>has_double_slash</b><span>// in path is a known obfuscation trick.</span></div>
+          <div class="fe-item"><span class="fe-num">10</span><b>has_equals</b><span>= in redirects can hide malicious destinations.</span></div>
+          <div class="fe-item"><span class="fe-num">11</span><b>has_question_mark</b><span>Heavy query strings used in credential harvesting.</span></div>
+          <div class="fe-item"><span class="fe-num">12</span><b>has_percent</b><span>% encoding used to obfuscate phishing content.</span></div>
+          <div class="fe-item"><span class="fe-num">13</span><b>has_ip_address</b><span>IP instead of domain name is a strong phishing signal.</span></div>
+          <div class="fe-item"><span class="fe-num">14</span><b>num_special_chars</b><span>Counts symbols unusual in legitimate URLs.</span></div>
+          <div class="fe-item"><span class="fe-num">15</span><b>uses_https</b><span>HTTP (no TLS) is a risk flag.</span></div>
+          <div class="fe-item"><span class="fe-num">16</span><b>suspicious_keywords</b><span>login, verify, secure, bank, update, etc.</span></div>
+        </div>
+      </div>
+
+    </section>
+
+    <footer>
+      <p>Design and Implementation of an Intelligent URL Phishing Detection System Using Lexical Feature Extraction and Machine Learning</p>
+      <p>Final Year Project · Department of Computer Science · Legacy University Okija</p>
+    </footer>
+
+  </div>
+
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
